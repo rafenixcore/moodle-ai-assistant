@@ -1,5 +1,8 @@
 # Moodle AI Assistant
 
+[![CI](https://github.com/hrafael2011/moodle-ai-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/hrafael2011/moodle-ai-assistant/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 Asistente conversacional **dentro de Moodle** para docentes: 34 herramientas
 sobre los Web Services REST de Moodle, con **confirmación humana** antes de
 cualquier escritura y doble barrera de permisos (token de lectura vs. token de
