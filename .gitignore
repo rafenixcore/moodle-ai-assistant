@@ -1,0 +1,16 @@
+# Secretos — jamás versionar
+.env
+config.php
+
+# Codebase de Moodle (código de terceros, se descarga aparte)
+moodle-latest-502/
+
+# Dependencias y artefactos
+mcp-server/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Datos locales
+moodledata/

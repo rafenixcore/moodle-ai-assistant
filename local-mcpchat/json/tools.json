@@ -1,0 +1,822 @@
+[
+  {
+    "name": "agregar_a_grupo",
+    "description": "⚠️ ESCRITURA. Agrega a un usuario a un grupo existente.",
+    "parameters": {
+      "properties": {
+        "grupo_id": {
+          "title": "Grupo Id",
+          "type": "integer"
+        },
+        "usuario_id": {
+          "title": "Usuario Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "grupo_id",
+        "usuario_id"
+      ],
+      "title": "agregar_a_grupoArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "analizar_entregas_pendientes",
+    "description": "Analiza el estado de las entregas de una asignacion (solo lectura).\n\n        Devuelve un informe estructurado: quien entrego, quien no, que\n        entregas no tienen nota y cuales son tardias. Es la fase ANALIZAR\n        del flujo analizar->proponer->aprobar->aplicar: este tool nunca\n        escribe, la escritura la hace calificar_lote solo despues de que\n        el usuario apruebe las calificaciones propuestas.\n\n        Args:\n            asignacion_id: id de la asignacion (campo assignment_id de\n                listar_asignaciones).\n            fecha_limite_ts: timestamp Unix de la fecha limite (del campo\n                duedate de listar_asignaciones) para marcar entregas tardias.\n                Con 0 se omite el analisis de tardias.\n        ",
+    "parameters": {
+      "properties": {
+        "asignacion_id": {
+          "title": "Asignacion Id",
+          "type": "integer"
+        },
+        "fecha_limite_ts": {
+          "default": 0,
+          "title": "Fecha Limite Ts",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asignacion_id"
+      ],
+      "title": "analizar_entregas_pendientesArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "bloquear_entregas",
+    "description": "⚠️ ESCRITURA. Impide que el estudiante modifique su entrega.",
+    "parameters": {
+      "properties": {
+        "asignacion_id": {
+          "title": "Asignacion Id",
+          "type": "integer"
+        },
+        "estudiante_id": {
+          "title": "Estudiante Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asignacion_id",
+        "estudiante_id"
+      ],
+      "title": "bloquear_entregasArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "buscar_usuario",
+    "description": "Busca un usuario por username, email o nombre (lectura).\n\n        Limitacion de Moodle 5.2: el campo username solo se incluye en los\n        detalles del propio usuario o de quien tiene moodle/user:viewalldetails,\n        asi que el criterio username del WS no devuelve otros usuarios con un\n        token de docente. La tool reintenta con email y firstname (LIKE\n        parcial) y devuelve en que campo encontro la coincidencia.\n\n        Args:\n            username: username, email o nombre parcial a buscar.\n        ",
+    "parameters": {
+      "properties": {
+        "username": {
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "username"
+      ],
+      "title": "buscar_usuarioArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "calificar_entrega",
+    "description": "⚠️ ESCRITURA IRREVERSIBLE. Guarda nota y feedback de una entrega.\n\n        Requiere token docente y confirmacion humana en el cliente.\n        ",
+    "parameters": {
+      "properties": {
+        "asignacion_id": {
+          "title": "Asignacion Id",
+          "type": "integer"
+        },
+        "estudiante_id": {
+          "title": "Estudiante Id",
+          "type": "integer"
+        },
+        "nota": {
+          "title": "Nota",
+          "type": "number"
+        },
+        "comentario": {
+          "default": "",
+          "title": "Comentario",
+          "type": "string"
+        }
+      },
+      "required": [
+        "asignacion_id",
+        "estudiante_id",
+        "nota"
+      ],
+      "title": "calificar_entregaArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "calificar_lote",
+    "description": "⚠️ ESCRITURA EN LOTE. Recibe [{asignacion_id, estudiante_id, nota, comentario}].\n\n        Usa mod_assign_save_grades en una sola llamada. Requiere aprobacion humana.\n        ",
+    "parameters": {
+      "properties": {
+        "calificaciones": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Calificaciones",
+          "type": "array"
+        }
+      },
+      "required": [
+        "calificaciones"
+      ],
+      "title": "calificar_loteArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "clonar_curso",
+    "description": "⚠️ ESCRITURA. Clona un curso completo (actividades incluidas).\n\n        La copia es ASINCRONA: Moodle encola un job (adhoc task) que corre\n        en el siguiente cron. Puede tardar minutos. El job se consulta con\n        estado_clonacion o en la UI (Progreso de copias del curso).\n\n        Args:\n            curso_origen_id: id del curso a clonar (campo course_id de\n                listar_cursos).\n            nombre_nuevo: nombre completo del curso clonado.\n            shortname_nuevo: nombre corto unico del curso clonado.\n            categoria_id: categoria destino (default 1 = Miscelanea).\n        ",
+    "parameters": {
+      "properties": {
+        "curso_origen_id": {
+          "title": "Curso Origen Id",
+          "type": "integer"
+        },
+        "nombre_nuevo": {
+          "title": "Nombre Nuevo",
+          "type": "string"
+        },
+        "shortname_nuevo": {
+          "title": "Shortname Nuevo",
+          "type": "string"
+        },
+        "categoria_id": {
+          "default": 1,
+          "title": "Categoria Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "curso_origen_id",
+        "nombre_nuevo",
+        "shortname_nuevo"
+      ],
+      "title": "clonar_cursoArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_curso",
+    "description": "⚠️ ESCRITURA. Crea un curso nuevo (vacio, sin actividades).\n\n        Args:\n            nombre: nombre completo del curso.\n            shortname: nombre corto unico (sin espacios).\n            descripcion: texto HTML de la descripcion general del curso.\n            categoria_id: categoria destino (default 1 = Miscelanea).\n        ",
+    "parameters": {
+      "properties": {
+        "nombre": {
+          "title": "Nombre",
+          "type": "string"
+        },
+        "shortname": {
+          "title": "Shortname",
+          "type": "string"
+        },
+        "descripcion": {
+          "default": "",
+          "title": "Descripcion",
+          "type": "string"
+        },
+        "categoria_id": {
+          "default": 1,
+          "title": "Categoria Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "nombre",
+        "shortname"
+      ],
+      "title": "crear_cursoArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_enlace",
+    "description": "⚠️ ESCRITURA. Crea un enlace (url) a una pagina web en un curso.",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        },
+        "nombre": {
+          "title": "Nombre",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "curso_id",
+        "nombre",
+        "url"
+      ],
+      "title": "crear_enlaceArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_etiqueta",
+    "description": "⚠️ ESCRITURA. Crea una etiqueta (label) con texto en un curso.",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        },
+        "texto": {
+          "title": "Texto",
+          "type": "string"
+        }
+      },
+      "required": [
+        "curso_id",
+        "texto"
+      ],
+      "title": "crear_etiquetaArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_evento",
+    "description": "⚠️ ESCRITURA. Crea un evento en el calendario (curso o sitio).\n\n        Args:\n            fecha_ini_ts: timestamp Unix de inicio del evento.\n        ",
+    "parameters": {
+      "properties": {
+        "nombre": {
+          "title": "Nombre",
+          "type": "string"
+        },
+        "fecha_ini_ts": {
+          "title": "Fecha Ini Ts",
+          "type": "integer"
+        },
+        "curso_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Curso Id"
+        }
+      },
+      "required": [
+        "nombre",
+        "fecha_ini_ts"
+      ],
+      "title": "crear_eventoArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_grupo",
+    "description": "⚠️ ESCRITURA. Crea un grupo dentro de un curso.",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        },
+        "nombre": {
+          "title": "Nombre",
+          "type": "string"
+        }
+      },
+      "required": [
+        "curso_id",
+        "nombre"
+      ],
+      "title": "crear_grupoArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_pagina",
+    "description": "⚠️ ESCRITURA. Crea una pagina (page) en un curso.\n\n        Nota: el contenido HTML de la pagina se edita luego en la UI; el WS\n        solo fija el nombre y la descripcion (intro).\n        ",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        },
+        "nombre": {
+          "title": "Nombre",
+          "type": "string"
+        },
+        "instrucciones": {
+          "default": "",
+          "title": "Instrucciones",
+          "type": "string"
+        }
+      },
+      "required": [
+        "curso_id",
+        "nombre"
+      ],
+      "title": "crear_paginaArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_recurso",
+    "description": "⚠️ ESCRITURA. Crea un archivo (resource) en un curso.\n\n        Nota: el archivo real se adjunta luego en la UI; el contenido es\n        solo texto de ejemplo (v1 del plugin).\n        ",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        },
+        "nombre": {
+          "title": "Nombre",
+          "type": "string"
+        },
+        "contenido": {
+          "default": "",
+          "title": "Contenido",
+          "type": "string"
+        },
+        "instrucciones": {
+          "default": "",
+          "title": "Instrucciones",
+          "type": "string"
+        }
+      },
+      "required": [
+        "curso_id",
+        "nombre"
+      ],
+      "title": "crear_recursoArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_tarea",
+    "description": "⚠️ ESCRITURA. Crea una tarea (assign) en un curso.\n\n        Args:\n            fecha_limite_ts: timestamp Unix de la fecha limite (0 = sin fecha).\n            nota_maxima: nota maxima de la tarea (default 100).\n        ",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        },
+        "nombre": {
+          "title": "Nombre",
+          "type": "string"
+        },
+        "instrucciones": {
+          "default": "",
+          "title": "Instrucciones",
+          "type": "string"
+        },
+        "fecha_limite_ts": {
+          "default": 0,
+          "title": "Fecha Limite Ts",
+          "type": "integer"
+        },
+        "nota_maxima": {
+          "default": 100,
+          "title": "Nota Maxima",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "curso_id",
+        "nombre"
+      ],
+      "title": "crear_tareaArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "crear_usuario",
+    "description": "⚠️ ESCRITURA. Crea un usuario nuevo en el sitio.\n\n        Requiere moodle/user:createuser (permiso de administracion del\n        sitio): el rol editingteacher NO lo tiene; usa un token de admin.\n        ",
+    "parameters": {
+      "properties": {
+        "username": {
+          "title": "Username",
+          "type": "string"
+        },
+        "password": {
+          "title": "Password",
+          "type": "string"
+        },
+        "firstname": {
+          "title": "Firstname",
+          "type": "string"
+        },
+        "lastname": {
+          "title": "Lastname",
+          "type": "string"
+        },
+        "email": {
+          "title": "Email",
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "password",
+        "firstname",
+        "lastname",
+        "email"
+      ],
+      "title": "crear_usuarioArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "desbloquear_entregas",
+    "description": "⚠️ ESCRITURA. Permite de nuevo modificar la entrega.",
+    "parameters": {
+      "properties": {
+        "asignacion_id": {
+          "title": "Asignacion Id",
+          "type": "integer"
+        },
+        "estudiante_id": {
+          "title": "Estudiante Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asignacion_id",
+        "estudiante_id"
+      ],
+      "title": "desbloquear_entregasArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "desmatricular_usuario",
+    "description": "⚠️ ESCRITURA. Desmatricula a un usuario de un curso.",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        },
+        "usuario_id": {
+          "title": "Usuario Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "curso_id",
+        "usuario_id"
+      ],
+      "title": "desmatricular_usuarioArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "enviar_mensaje",
+    "description": "⚠️ ESCRITURA. Envia un mensaje a una conversacion (chat interno).\n\n        Requiere el id de una conversacion existente del usuario del token.\n        ",
+    "parameters": {
+      "properties": {
+        "conversacion_id": {
+          "title": "Conversacion Id",
+          "type": "integer"
+        },
+        "texto": {
+          "title": "Texto",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conversacion_id",
+        "texto"
+      ],
+      "title": "enviar_mensajeArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "estado_clonacion",
+    "description": "Consulta el progreso de un job de clonacion (solo lectura).\n\n        Usa el token docente: el WS valida el contexto del curso clonado\n        (nuevo, sin matriculaciones) y el job pertenece al usuario que\n        lanzo la copia.\n\n        Args:\n            backupid/restoreid/operation: los copyids devueltos por\n                clonar_curso.\n        ",
+    "parameters": {
+      "properties": {
+        "backupid": {
+          "title": "Backupid",
+          "type": "string"
+        },
+        "restoreid": {
+          "title": "Restoreid",
+          "type": "string"
+        },
+        "operation": {
+          "default": "copy",
+          "title": "Operation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "backupid",
+        "restoreid"
+      ],
+      "title": "estado_clonacionArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "estado_estudiante",
+    "description": "Estado de una entrega concreta: entregada, en borrador, calificada, etc.",
+    "parameters": {
+      "properties": {
+        "asignacion_id": {
+          "title": "Asignacion Id",
+          "type": "integer"
+        },
+        "estudiante_id": {
+          "title": "Estudiante Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asignacion_id",
+        "estudiante_id"
+      ],
+      "title": "estado_estudianteArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "listar_actividades",
+    "description": "Lista las actividades de un curso con su tipo, id y seccion.",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "curso_id"
+      ],
+      "title": "listar_actividadesArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "listar_asignaciones",
+    "description": "Lista las asignaciones (tareas) con id, nombre, fecha limite y nota maxima.\n\n        Args:\n            curso_id: id del curso a filtrar; omitir para ver todos los cursos.\n        ",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Curso Id"
+        }
+      },
+      "title": "listar_asignacionesArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "listar_cursos",
+    "description": "Lista los cursos visibles para el token actual (id, nombre corto, nombre).",
+    "parameters": {
+      "properties": {},
+      "title": "listar_cursosArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "listar_discusiones",
+    "description": "Lista las discusiones de un foro (lectura).\n\n        Devuelve post_id (id del primer post) para usar en\n        responder_discusion.\n        ",
+    "parameters": {
+      "properties": {
+        "foro_id": {
+          "title": "Foro Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "foro_id"
+      ],
+      "title": "listar_discusionesArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "listar_entregas",
+    "description": "Lista las entregas (submissions) de una asignacion.\n\n        Args:\n            asignacion_id: id de la asignacion (assignment_id de listar_asignaciones).\n            estudiante_id: filtrar por un estudiante; omitir para todas.\n        ",
+    "parameters": {
+      "properties": {
+        "asignacion_id": {
+          "title": "Asignacion Id",
+          "type": "integer"
+        },
+        "estudiante_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Estudiante Id"
+        }
+      },
+      "required": [
+        "asignacion_id"
+      ],
+      "title": "listar_entregasArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "listar_foros",
+    "description": "Lista los foros de un curso (lectura).",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "curso_id"
+      ],
+      "title": "listar_forosArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "matricular_usuario",
+    "description": "⚠️ ESCRITURA. Matricula a un usuario en un curso.\n\n        Args:\n            rol: student (5), teacher (3) o noneditingteacher (4).\n        ",
+    "parameters": {
+      "properties": {
+        "curso_id": {
+          "title": "Curso Id",
+          "type": "integer"
+        },
+        "usuario_id": {
+          "title": "Usuario Id",
+          "type": "integer"
+        },
+        "rol": {
+          "default": "student",
+          "title": "Rol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "curso_id",
+        "usuario_id"
+      ],
+      "title": "matricular_usuarioArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "otorgar_prorroga",
+    "description": "⚠️ ESCRITURA. Extiende la fecha limite para un estudiante.\n\n        Args:\n            nueva_fecha: timestamp Unix (segundos) de la nueva fecha limite.\n        ",
+    "parameters": {
+      "properties": {
+        "asignacion_id": {
+          "title": "Asignacion Id",
+          "type": "integer"
+        },
+        "estudiante_id": {
+          "title": "Estudiante Id",
+          "type": "integer"
+        },
+        "nueva_fecha": {
+          "title": "Nueva Fecha",
+          "type": "string"
+        }
+      },
+      "required": [
+        "asignacion_id",
+        "estudiante_id",
+        "nueva_fecha"
+      ],
+      "title": "otorgar_prorrogaArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "publicar_anuncio",
+    "description": "⚠️ ESCRITURA. Publica una discusion nueva en un foro.\n\n        El mensaje se interpreta como HTML (formato del WS de Moodle).\n        ",
+    "parameters": {
+      "properties": {
+        "foro_id": {
+          "title": "Foro Id",
+          "type": "integer"
+        },
+        "asunto": {
+          "title": "Asunto",
+          "type": "string"
+        },
+        "mensaje": {
+          "title": "Mensaje",
+          "type": "string"
+        }
+      },
+      "required": [
+        "foro_id",
+        "asunto",
+        "mensaje"
+      ],
+      "title": "publicar_anuncioArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "responder_discusion",
+    "description": "⚠️ ESCRITURA. Responde al primer post de una discusion.\n\n        Args:\n            post_id: id del post a responder (el campo post_id que\n                devuelve listar_discusiones).\n        ",
+    "parameters": {
+      "properties": {
+        "post_id": {
+          "title": "Post Id",
+          "type": "integer"
+        },
+        "asunto": {
+          "title": "Asunto",
+          "type": "string"
+        },
+        "mensaje": {
+          "title": "Mensaje",
+          "type": "string"
+        }
+      },
+      "required": [
+        "post_id",
+        "asunto",
+        "mensaje"
+      ],
+      "title": "responder_discusionArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "resumir_entrega",
+    "description": "(solo lectura) Devuelve el texto de una entrega para que la IA del\n        cliente la resuma.\n\n        Camino de IA del flujo (ver docs/ia_nativa.md): el servidor MCP NO\n        duplica logica de IA (YAGNI). Este tool solo extrae el texto; el\n        resumen lo escribe el cliente y se guarda como feedback con\n        calificar_entrega (plugin de comentarios). El provider nativo de\n        Moodle (Ollama/DeepSeek local, ver scripts/cli/ai_config.php) queda\n        para las acciones de IA DENTRO de Moodle (editor, Course Assistant).\n\n        Args:\n            submission_id: id de la entrega (campo submission_id de\n                listar_entregas o analizar_entregas_pendientes).\n        ",
+    "parameters": {
+      "properties": {
+        "submission_id": {
+          "title": "Submission Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "submission_id"
+      ],
+      "title": "resumir_entregaArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "revertir_a_borrador",
+    "description": "⚠️ ESCRITURA. Devuelve la entrega a borrador (para permitir correccion).",
+    "parameters": {
+      "properties": {
+        "asignacion_id": {
+          "title": "Asignacion Id",
+          "type": "integer"
+        },
+        "estudiante_id": {
+          "title": "Estudiante Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asignacion_id",
+        "estudiante_id"
+      ],
+      "title": "revertir_a_borradorArguments",
+      "type": "object"
+    }
+  },
+  {
+    "name": "tareas_urgentes",
+    "description": "Todas las tareas con fecha limite, ordenadas por urgencia.\n\n        Devuelve vencidas primero (dias en negativo) y luego las proximas.\n        ",
+    "parameters": {
+      "properties": {},
+      "title": "tareas_urgentesArguments",
+      "type": "object"
+    }
+  }
+]

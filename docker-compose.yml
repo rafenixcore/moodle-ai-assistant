@@ -1,0 +1,79 @@
+services:
+  db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MYSQL_DATABASE}
+      MARIADB_USER: ${MYSQL_USER}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - moodle-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: ./docker/web
+    image: moodle-web:5.2
+    ports:
+      # D7: solo localhost, nada expuesto a la red
+      - "127.0.0.1:8080:80"
+    extra_hosts:
+      # IA nativa (Task 20): el contenedor alcanza Ollama del host por
+      # host.docker.internal (sin esto, host-gateway no resuelve en Linux)
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Codebase de Moodle (montado para desarrollo; en produccion se copia a la imagen)
+      - ./moodle-latest-502/moodle:/var/www/html
+      # Datos de Moodle (archivos subidos, cache) — fuera del codebase
+      - moodle-data:/var/www/moodledata
+      # Plugin local (Fase 4) — montado desde el repo.
+      # OJO: dirroot real = /var/www/html/public (separacion de webroot de
+      # Moodle 5.x), por eso los plugins van en public/local/.
+      - ./local-mcpbridge:/var/www/html/public/local/mcpbridge
+      - ./local-mcpchat:/var/www/html/public/local/mcpchat
+      # Scripts propios del proyecto (seed, config WS)
+      - ./scripts:/var/www/html/local/seedscripts
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # IA nativa (Task 20): Ollama del host escucha SOLO en 127.0.0.1:11434
+  # (bind por defecto). Los contenedores llegan al host por el bridge docker
+  # (172.17.0.1), no por loopback, asi que este relay expone el puerto a la
+  # red de contenedores sin tocar el servicio del host (OLLAMA_HOST queda
+  # intacto). network_mode: host = comparte el netns del host, puede ver
+  # 127.0.0.1. Bind explicito a 172.17.0.1: nada expuesto a la LAN.
+  ollama-proxy:
+    image: alpine/socat:latest
+    network_mode: host
+    command: TCP-LISTEN:11434,bind=172.17.0.1,fork,reuseaddr TCP:127.0.0.1:11434
+    restart: unless-stopped
+
+  cron:
+    build: ./docker/web
+    image: moodle-web:5.2
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          php /var/www/html/admin/cli/cron.php
+          sleep 60
+        done
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./moodle-latest-502/moodle:/var/www/html
+      - moodle-data:/var/www/moodledata
+      - ./local-mcpbridge:/var/www/html/public/local/mcpbridge
+      - ./local-mcpchat:/var/www/html/public/local/mcpchat
+      - ./scripts:/var/www/html/local/seedscripts
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  moodle-db-data:
+  moodle-data:
