@@ -1,6 +1,6 @@
 # Moodle AI Assistant
 
-[![CI](https://github.com/hrafael2011/moodle-ai-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/hrafael2011/moodle-ai-assistant/actions/workflows/ci.yml)
+[![CI](https://github.com/rafenixcore/moodle-ai-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/rafenixcore/moodle-ai-assistant/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Asistente conversacional **dentro de Moodle** para docentes: 34 herramientas
